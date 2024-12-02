@@ -30,7 +30,7 @@ if (app.Environment.IsDevelopment())
 
 ////Get Endpoints
 
-//Get all heroes
+//Get all heroes (name, class)
 app.MapGet("/api/heroes", async (SuperHeroDbContext dbContext) =>
 {
     var heroes = await dbContext.Heroes
@@ -43,6 +43,10 @@ app.MapGet("/api/heroes", async (SuperHeroDbContext dbContext) =>
 
     return Results.Ok(heroes);
 });
+
+
+//Get a single hero's details (name, class, level, description, their current quest's name, equipment)
+
 
 app.UseHttpsRedirection();
 
