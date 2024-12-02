@@ -7,6 +7,7 @@ namespace SuperHero.Models
         public string Description { get; set; }
         public int HeroClassId { get; set; }
         public HeroClass HeroClass { get; set; }
+        public Quest? Quest { get; set; }
         public int Level { get; set; }
         public int? QuestId { get; set; }
     }
