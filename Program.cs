@@ -3,6 +3,7 @@ using SuperHero.DTOs.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -186,6 +187,59 @@ app.MapPost("/api/complete-quest", async (QuestCompleteDTO questCompleteDTO, Sup
     await dbContext.SaveChangesAsync();
 
     return Results.Ok(new { Message = $"Quest {quest.Name} completed." });
+});
+
+
+//Create a new Equipment item (name, description, type, weight)
+app.MapPost("/api/equipment", async (EquipmentCreateDTO equipmentDTO, SuperHeroDbContext dbContext) =>
+{
+    var equipmentType = await dbContext.EquipmentTypes.FindAsync(equipmentDTO.TypeId);
+
+    var equipment = new Equipment
+    {
+        Name = equipmentDTO.Name,
+        Description = equipmentDTO.Description,
+        TypeId = equipmentDTO.TypeId,
+        Weight = equipmentDTO.Weight
+    };
+
+    dbContext.Equipment.Add(equipment);
+    await dbContext.SaveChangesAsync();
+
+    return Results.Ok(equipment);
+});
+
+//Assign equipment to a hero
+app.MapPost("/api/assign-equipment", async (EquipmentAssignDTO equipmentAssignDTO, SuperHeroDbContext dbContext) =>
+{
+
+    //assigning the hero variable to the dbContext property Heroes
+    var hero = await dbContext.Heroes
+        .Where(h => h.Id == equipmentAssignDTO.HeroId)
+        .FirstOrDefaultAsync();
+
+    var equipment = await dbContext.Equipment
+        .Where(e => e.Id == equipmentAssignDTO.EquipmentId)
+        .FirstOrDefaultAsync();
+
+    equipment.HeroId = equipmentAssignDTO.HeroId;
+    await dbContext.SaveChangesAsync();
+
+    return Results.Ok(new { Message = $"Equipment {equipment.Name} assigned to hero {hero.Name}." });
+});
+
+
+////Delete Endpoints
+
+//Delete Equipment
+app.MapDelete("/api/equipment/{id}", async (int id, SuperHeroDbContext dbContext) =>
+{
+    var equipment = await dbContext.Equipment.FindAsync(id);
+
+    dbContext.Equipment.Remove(equipment);
+    await dbContext.SaveChangesAsync();
+
+    return Results.Ok(new { Message = $"Equipment {equipment.Name} deleted." });
 });
 
 app.UseHttpsRedirection();
