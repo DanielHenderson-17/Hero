@@ -141,6 +141,53 @@ app.MapGet("/api/quests/{id}", async (int id, SuperHeroDbContext dbContext) =>
 });
 
 
+////Post Endpoints
+
+//Create a quest(name, description)
+app.MapPost("/api/quests", async (QuestCreateDTO questCreateDTO, SuperHeroDbContext dbContext) =>
+{
+    var quest = new Quest
+    {
+        Name = questCreateDTO.Name,
+        Description = questCreateDTO.Description
+    };
+
+    dbContext.Quests.Add(quest);
+    await dbContext.SaveChangesAsync();
+
+    return Results.Ok(quest);
+});
+
+//Assign a hero to a quest
+app.MapPost("/api/assign-hero", async (HeroQuestDTO heroQuestDTO, SuperHeroDbContext dbContext) =>
+{
+    var hero = await dbContext.Heroes
+        .Where(h => h.Id == heroQuestDTO.HeroId)
+        .FirstOrDefaultAsync();
+
+    var quest = await dbContext.Quests
+        .Where(q => q.Id == heroQuestDTO.QuestId)
+        .FirstOrDefaultAsync();
+
+    hero.QuestId = heroQuestDTO.QuestId;
+    await dbContext.SaveChangesAsync();
+
+    return Results.Ok(new { Message = $"Hero {hero.Name} assigned to quest {quest.Name}." });
+});
+
+//Complete a quest
+app.MapPost("/api/complete-quest", async (QuestCompleteDTO questCompleteDTO, SuperHeroDbContext dbContext) =>
+{
+    var quest = await dbContext.Quests
+        .Where(q => q.Id == questCompleteDTO.QuestId)
+        .FirstOrDefaultAsync();
+
+    quest.IsCompleted = true;
+    await dbContext.SaveChangesAsync();
+
+    return Results.Ok(new { Message = $"Quest {quest.Name} completed." });
+});
+
 app.UseHttpsRedirection();
 
 
