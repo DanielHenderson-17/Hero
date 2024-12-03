@@ -47,46 +47,52 @@ app.MapGet("/api/heroes", async (SuperHeroDbContext dbContext) =>
 
 
 //Get a single hero's details (name, class, level, description, their current quest's name, equipment)
-// app.MapGet("/api/heroes/{id}", async (int id, SuperHeroDbContext dbContext) =>
-// {
-//     var heroDetails = await dbContext.Heroes
-//         .Where(h => h.Id == id)
-//         .Select(h => new
-//         {
-//             h.Name,
-//             h.Level,
-//             h.Description,
-//             Class = dbContext.HeroClasses
-//                 .Where(c => c.Id == h.HeroClassId)
-//                 .Select(c => c.Name)
-//                 .FirstOrDefault(),
-//             Quest = dbContext.Quests
-//                 .Where(q => q.Id == h.QuestId)
-//                 .Select(q => q.Name)
-//                 .FirstOrDefault() ?? "No active quest",
-//             Equipment = dbContext.Equipment
-//                 .Where(e => e.HeroId == h.Id)
-//                 .Select(e => new
-//                 {
-//                     e.Name,
-//                     e.Description,
-//                     Type = dbContext.EquipmentTypes
-//                         .Where(et => et.Id == e.TypeId)
-//                         .Select(et => et.Name)
-//                         .FirstOrDefault(),
-//                     e.Weight
-//                 })
-//                 .ToList()
-//         })
-//         .FirstOrDefaultAsync();
+app.MapGet("/api/heroes/{id}", async (int id, SuperHeroDbContext dbContext) =>
+{
+    var heroDetails = await dbContext.Heroes
+        .Where(h => h.Id == id)
+        .Select(h => new
+        {
+            h.Name,
+            h.Level,
+            h.Description,
+            Class = dbContext.HeroClasses
+                .Where(c => c.Id == h.HeroClassId)
+                .Select(c => c.Name)
+                .FirstOrDefault(),
+            Quest = dbContext.HeroQuests
+                .Where(hq => hq.HeroId == h.Id)
+                .Select(hq => new
+                {
+                    hq.Quest.Id,
+                    hq.Quest.Name,
+                    hq.Quest.Description,
+                    hq.Quest.IsCompleted
+                })
+                .ToList(),
+            Equipment = dbContext.Equipment
+                .Where(e => e.HeroId == h.Id)
+                .Select(e => new
+                {
+                    e.Name,
+                    e.Description,
+                    Type = dbContext.EquipmentTypes
+                        .Where(et => et.Id == e.TypeId)
+                        .Select(et => et.Name)
+                        .FirstOrDefault(),
+                    e.Weight
+                })
+                .ToList()
+        })
+        .FirstOrDefaultAsync();
 
-//     if (heroDetails == null)
-//     {
-//         return Results.NotFound(new { Message = $"Hero with ID {id} not found." });
-//     }
+    if (heroDetails == null)
+    {
+        return Results.NotFound(new { Message = $"Hero with ID {id} not found." });
+    }
 
-//     return Results.Ok(heroDetails);
-// });
+    return Results.Ok(heroDetails);
+});
 
 
 //Get all equipment (name, description, type)
@@ -121,25 +127,30 @@ app.MapGet("/api/quests", async (SuperHeroDbContext dbContext) =>
     return Results.Ok(quests);
 });
 
-//Get a quest's details (name, description, isCompleted, heroes)
-// app.MapGet("/api/quests/{id}", async (int id, SuperHeroDbContext dbContext) =>
-// {
-//     var questDetails = await dbContext.Quests
-//         .Where(q => q.Id == id)
-//         .Select(q => new
-//         {
-//             q.Name,
-//             q.Description,
-//             q.IsCompleted,
-//             Heroes = dbContext.Heroes
-//                 .Where(h => h.QuestId == q.Id)
-//                 .Select(h => h.Name)
-//                 .ToList()
-//         })
-//         .FirstOrDefaultAsync();
+// Get a quest's details (name, description, isCompleted, heroes)
+app.MapGet("/api/quests/{id}", async (int id, SuperHeroDbContext dbContext) =>
+{
+    var questDetails = await dbContext.Quests
+        .Where(q => q.Id == id)
+        .Select(q => new
+        {
+            q.Name,
+            q.Description,
+            q.IsCompleted,
+            Heroes = dbContext.HeroQuests
+                .Select(hq => hq.Hero.Name)
+                .Distinct()
+                .ToList()
+        })
+        .FirstOrDefaultAsync();
 
-//     return Results.Ok(questDetails);
-// });
+    if (questDetails == null)
+    {
+        return Results.NotFound(new { Message = $"Quest {id} not found" });
+    }
+
+    return Results.Ok(questDetails);
+});
 
 
 ////Post Endpoints
@@ -196,10 +207,6 @@ app.MapPost("/api/assign-hero", async (HeroQuestDTO heroQuestDTO, SuperHeroDbCon
 
     return Results.Ok(new { Message = $"Hero {hero.Name} assigned to quest {quest.Name}." });
 });
-
-
-
-
 
 
 //Complete a quest
@@ -290,27 +297,21 @@ app.MapDelete("/api/heroes/{id}", async (int id, SuperHeroDbContext dbContext) =
 });
 
 //Delete Quest
-// app.MapDelete("/api/quests/{id}", async (int id, SuperHeroDbContext dbContext) =>
-// {
-//     var quest = await dbContext.Quests.FindAsync(id);
+app.MapDelete("/api/quests/{id}", async (int id, SuperHeroDbContext dbContext) =>
+{
+    var quest = await dbContext.Quests.FindAsync(id);
 
-//     var heroes = await dbContext.Heroes
-//         .Where(h => h.QuestId == id)
-//         .ToListAsync();
+    var heroes = await dbContext.HeroQuests
+        .Where(hq => hq.QuestId == id)
+        .ToListAsync();
 
-//     foreach (var h in heroes)
-//     {
-//         h.QuestId = null;
-//     }
+    dbContext.Quests.Remove(quest);
+    await dbContext.SaveChangesAsync();
 
-//     dbContext.Quests.Remove(quest);
-//     await dbContext.SaveChangesAsync();
-
-//     return Results.Ok(new { Message = $"Quest {quest.Name} deleted." });
-// });
+    return Results.Ok(new { Message = $"Quest {quest.Name} deleted." });
+});
 
 
-//Assign Hero to multiple Quests
 
 
 
