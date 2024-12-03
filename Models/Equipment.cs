@@ -10,8 +10,8 @@ namespace SuperHero.Models
         public int TypeId { get; set; }
         public float Weight { get; set; }
         public int? HeroId { get; set; }
-        // public List<QuestEquipment> QuestEquipments { get; set; } = new List<QuestEquipment>();
-        // public bool isAvailable { get; set; } = false;
+        public List<QuestEquipment> QuestEquipments { get; set; } = new List<QuestEquipment>();
+        public bool isAvailable { get; set; } = false;
     }
 }
 

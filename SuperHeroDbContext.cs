@@ -10,6 +10,7 @@ public class SuperHeroDbContext : DbContext
     public DbSet<Equipment> Equipment { get; set; }
     public DbSet<EquipmentType> EquipmentTypes { get; set; }
     public DbSet<HeroQuest> HeroQuests { get; set; }
+    public DbSet<QuestEquipment> QuestEquipments { get; set; }
 
     public SuperHeroDbContext(DbContextOptions<SuperHeroDbContext> context) : base(context)
     {
@@ -54,18 +55,30 @@ public class SuperHeroDbContext : DbContext
         // Seed Equipment
         modelBuilder.Entity<Equipment>().HasData(new Equipment[]
         {
-        new Equipment { Id = 1, Name = "Steel Sword", Description = "A sharp blade", TypeId = 1, Weight = 3.5f, HeroId = 1 },
-        new Equipment { Id = 2, Name = "Wizard Staff", Description = "Channel your magic power", TypeId = 1, Weight = 2.0f, HeroId = 2 },
-        new Equipment { Id = 3, Name = "Leather Armor", Description = "Light but protective", TypeId = 2, Weight = 5.0f, HeroId = 3 },
-        new Equipment { Id = 4, Name = "Health Potion", Description = "Restores 50 HP", TypeId = 4, Weight = 0.5f, HeroId = null }
+        new Equipment { Id = 1, Name = "Steel Sword", Description = "A sharp blade", TypeId = 1, Weight = 3.5f, HeroId = 1, isAvailable = true },
+        new Equipment { Id = 2, Name = "Wizard Staff", Description = "Channel your magic power", TypeId = 1, Weight = 2.0f, HeroId = 2, isAvailable = true },
+        new Equipment { Id = 3, Name = "Leather Armor", Description = "Light but protective", TypeId = 2, Weight = 5.0f, HeroId = null, isAvailable = false },
+        new Equipment { Id = 4, Name = "Health Potion", Description = "Restores 50 HP", TypeId = 4, Weight = 0.5f, HeroId = null, isAvailable = false }
         });
 
+        //Configure many-to-many relationship between Hero and Quest
         modelBuilder.Entity<HeroQuest>().HasKey(hq => new { hq.HeroId, hq.QuestId });
 
+        // Seed HeroQuest
         modelBuilder.Entity<HeroQuest>().HasData(new HeroQuest[]
         {
             new HeroQuest { HeroId = 1, QuestId = 1 },
             new HeroQuest { HeroId = 2, QuestId = 2 }
+        });
+
+        //Configure many-to-many relationship between Quest and Equipment
+        modelBuilder.Entity<QuestEquipment>().HasKey(qe => new { qe.QuestId, qe.EquipmentId });
+
+        // Seed QuestEquipment
+        modelBuilder.Entity<QuestEquipment>().HasData(new QuestEquipment[]
+        {
+            new QuestEquipment { QuestId = 1, EquipmentId = 3 },
+            new QuestEquipment { QuestId = 2, EquipmentId = 4 }
         });
     }
 

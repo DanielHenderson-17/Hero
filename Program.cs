@@ -103,6 +103,7 @@ app.MapGet("/api/equipment", async (SuperHeroDbContext dbContext) =>
         {
             e.Name,
             e.Description,
+            e.isAvailable,
             Type = dbContext.EquipmentTypes
                 .Where(et => et.Id == e.TypeId)
                 .Select(et => et.Name)
@@ -170,6 +171,10 @@ app.MapPost("/api/quests", async (QuestCreateDTO questCreateDTO, SuperHeroDbCont
     return Results.Ok(quest);
 });
 
+//Add equipment as a bounty for a quest
+
+
+
 //Assign a hero to a quest
 app.MapPost("/api/assign-hero", async (HeroQuestDTO heroQuestDTO, SuperHeroDbContext dbContext) =>
 {
@@ -210,16 +215,35 @@ app.MapPost("/api/assign-hero", async (HeroQuestDTO heroQuestDTO, SuperHeroDbCon
 
 
 //Complete a quest
-app.MapPost("/api/complete-quest", async (QuestCompleteDTO questCompleteDTO, SuperHeroDbContext dbContext) =>
+app.MapPost("/api/quests/{questId}/complete", async (int questId, SuperHeroDbContext dbContext) =>
 {
     var quest = await dbContext.Quests
-        .Where(q => q.Id == questCompleteDTO.QuestId)
-        .FirstOrDefaultAsync();
+        .Include(q => q.QuestEquipments)
+        .ThenInclude(qe => qe.Equipment)
+        .FirstOrDefaultAsync(q => q.Id == questId);
+
+
+    if (quest == null)
+    {
+        return Results.NotFound(new { Message = $"Quest with ID {questId} not found." });
+    }
+
+    if (quest.IsCompleted)
+    {
+        return Results.BadRequest(new { Message = $"Quest {quest.Name} is already completed." });
+    }
 
     quest.IsCompleted = true;
+
+
+    foreach (var qe in quest.QuestEquipments)
+    {
+        qe.Equipment.isAvailable = true;
+    }
+
     await dbContext.SaveChangesAsync();
 
-    return Results.Ok(new { Message = $"Quest {quest.Name} completed." });
+    return Results.Ok(new { Message = $"Quest {quest.Name} completed. All associated equipment is now available" });
 });
 
 
@@ -246,14 +270,25 @@ app.MapPost("/api/equipment", async (EquipmentCreateDTO equipmentDTO, SuperHeroD
 app.MapPost("/api/assign-equipment", async (EquipmentAssignDTO equipmentAssignDTO, SuperHeroDbContext dbContext) =>
 {
 
-    //assigning the hero variable to the dbContext property Heroes
+    //Validating the hero
     var hero = await dbContext.Heroes
         .Where(h => h.Id == equipmentAssignDTO.HeroId)
         .FirstOrDefaultAsync();
 
+    if (hero == null)
+    {
+        return Results.NotFound(new { Message = $"Hero with ID {equipmentAssignDTO.HeroId} not found." });
+    }
+
+    //Validating the equipment
     var equipment = await dbContext.Equipment
-        .Where(e => e.Id == equipmentAssignDTO.EquipmentId)
+        .Where(e => e.Id == equipmentAssignDTO.EquipmentId && e.isAvailable)
         .FirstOrDefaultAsync();
+
+    if (equipment == null)
+    {
+        return Results.BadRequest(new { Message = "Equipment is bad or not earned yet ya dummy!" });
+    }
 
     equipment.HeroId = equipmentAssignDTO.HeroId;
     await dbContext.SaveChangesAsync();

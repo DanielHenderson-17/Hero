@@ -7,6 +7,6 @@ namespace SuperHero.Models
         public string Description { get; set; }
         public bool IsCompleted { get; set; }
         public List<HeroQuest> HeroQuests { get; set; }
-        // public List<QuestEquipment> QuestEquipments { get; set; } = new List<QuestEquipment>();
+        public List<QuestEquipment> QuestEquipments { get; set; } = new List<QuestEquipment>();
     }
 }

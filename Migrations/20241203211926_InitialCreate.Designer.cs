@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace SuperHero.Migrations
 {
     [DbContext(typeof(SuperHeroDbContext))]
-    [Migration("20241203171227_InitialCreate")]
+    [Migration("20241203211926_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -49,6 +49,9 @@ namespace SuperHero.Migrations
                     b.Property<float>("Weight")
                         .HasColumnType("real");
 
+                    b.Property<bool>("isAvailable")
+                        .HasColumnType("boolean");
+
                     b.HasKey("Id");
 
                     b.ToTable("Equipment");
@@ -61,7 +64,8 @@ namespace SuperHero.Migrations
                             HeroId = 1,
                             Name = "Steel Sword",
                             TypeId = 1,
-                            Weight = 3.5f
+                            Weight = 3.5f,
+                            isAvailable = true
                         },
                         new
                         {
@@ -70,16 +74,17 @@ namespace SuperHero.Migrations
                             HeroId = 2,
                             Name = "Wizard Staff",
                             TypeId = 1,
-                            Weight = 2f
+                            Weight = 2f,
+                            isAvailable = true
                         },
                         new
                         {
                             Id = 3,
                             Description = "Light but protective",
-                            HeroId = 3,
                             Name = "Leather Armor",
                             TypeId = 2,
-                            Weight = 5f
+                            Weight = 5f,
+                            isAvailable = false
                         },
                         new
                         {
@@ -87,7 +92,8 @@ namespace SuperHero.Migrations
                             Description = "Restores 50 HP",
                             Name = "Health Potion",
                             TypeId = 4,
-                            Weight = 0.5f
+                            Weight = 0.5f,
+                            isAvailable = false
                         });
                 });
 
@@ -152,9 +158,6 @@ namespace SuperHero.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("QuestId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("HeroClassId");
@@ -168,8 +171,7 @@ namespace SuperHero.Migrations
                             Description = "A brave warrior",
                             HeroClassId = 1,
                             Level = 10,
-                            Name = "Aragorn",
-                            QuestId = 1
+                            Name = "Aragorn"
                         },
                         new
                         {
@@ -177,8 +179,7 @@ namespace SuperHero.Migrations
                             Description = "A wise mage",
                             HeroClassId = 2,
                             Level = 15,
-                            Name = "Gandalf",
-                            QuestId = 2
+                            Name = "Gandalf"
                         },
                         new
                         {
@@ -296,6 +297,33 @@ namespace SuperHero.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SuperHero.Models.QuestEquipment", b =>
+                {
+                    b.Property<int>("QuestId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EquipmentId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("QuestId", "EquipmentId");
+
+                    b.HasIndex("EquipmentId");
+
+                    b.ToTable("QuestEquipments");
+
+                    b.HasData(
+                        new
+                        {
+                            QuestId = 1,
+                            EquipmentId = 3
+                        },
+                        new
+                        {
+                            QuestId = 2,
+                            EquipmentId = 4
+                        });
+                });
+
             modelBuilder.Entity("SuperHero.Models.Hero", b =>
                 {
                     b.HasOne("SuperHero.Models.HeroClass", "HeroClass")
@@ -326,6 +354,30 @@ namespace SuperHero.Migrations
                     b.Navigation("Quest");
                 });
 
+            modelBuilder.Entity("SuperHero.Models.QuestEquipment", b =>
+                {
+                    b.HasOne("SuperHero.Models.Equipment", "Equipment")
+                        .WithMany("QuestEquipments")
+                        .HasForeignKey("EquipmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SuperHero.Models.Quest", "Quest")
+                        .WithMany("QuestEquipments")
+                        .HasForeignKey("QuestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Equipment");
+
+                    b.Navigation("Quest");
+                });
+
+            modelBuilder.Entity("SuperHero.Models.Equipment", b =>
+                {
+                    b.Navigation("QuestEquipments");
+                });
+
             modelBuilder.Entity("SuperHero.Models.Hero", b =>
                 {
                     b.Navigation("HeroQuests");
@@ -334,6 +386,8 @@ namespace SuperHero.Migrations
             modelBuilder.Entity("SuperHero.Models.Quest", b =>
                 {
                     b.Navigation("HeroQuests");
+
+                    b.Navigation("QuestEquipments");
                 });
 #pragma warning restore 612, 618
         }
