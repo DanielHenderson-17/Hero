@@ -154,6 +154,8 @@ namespace SuperHero.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("HeroClassId");
+
                     b.ToTable("Heroes");
 
                     b.HasData(
@@ -224,6 +226,33 @@ namespace SuperHero.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SuperHero.Models.HeroQuest", b =>
+                {
+                    b.Property<int>("HeroId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("QuestId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("HeroId", "QuestId");
+
+                    b.HasIndex("QuestId");
+
+                    b.ToTable("HeroQuests");
+
+                    b.HasData(
+                        new
+                        {
+                            HeroId = 1,
+                            QuestId = 1
+                        },
+                        new
+                        {
+                            HeroId = 2,
+                            QuestId = 2
+                        });
+                });
+
             modelBuilder.Entity("SuperHero.Models.Quest", b =>
                 {
                     b.Property<int>("Id")
@@ -262,6 +291,46 @@ namespace SuperHero.Migrations
                             IsCompleted = false,
                             Name = "Retrieve the Ancient Artifact"
                         });
+                });
+
+            modelBuilder.Entity("SuperHero.Models.Hero", b =>
+                {
+                    b.HasOne("SuperHero.Models.HeroClass", "HeroClass")
+                        .WithMany()
+                        .HasForeignKey("HeroClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HeroClass");
+                });
+
+            modelBuilder.Entity("SuperHero.Models.HeroQuest", b =>
+                {
+                    b.HasOne("SuperHero.Models.Hero", "Hero")
+                        .WithMany("HeroQuests")
+                        .HasForeignKey("HeroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SuperHero.Models.Quest", "Quest")
+                        .WithMany("HeroQuests")
+                        .HasForeignKey("QuestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Hero");
+
+                    b.Navigation("Quest");
+                });
+
+            modelBuilder.Entity("SuperHero.Models.Hero", b =>
+                {
+                    b.Navigation("HeroQuests");
+                });
+
+            modelBuilder.Entity("SuperHero.Models.Quest", b =>
+                {
+                    b.Navigation("HeroQuests");
                 });
 #pragma warning restore 612, 618
         }

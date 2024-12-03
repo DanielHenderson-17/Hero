@@ -6,5 +6,6 @@ namespace SuperHero.Models
         public string Name { get; set; }
         public string Description { get; set; }
         public bool IsCompleted { get; set; }
+        public List<HeroQuest> HeroQuests { get; set; }
     }
 }

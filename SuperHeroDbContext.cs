@@ -9,7 +9,7 @@ public class SuperHeroDbContext : DbContext
     public DbSet<HeroClass> HeroClasses { get; set; }
     public DbSet<Equipment> Equipment { get; set; }
     public DbSet<EquipmentType> EquipmentTypes { get; set; }
-
+    public DbSet<HeroQuest> HeroQuests { get; set; }
 
     public SuperHeroDbContext(DbContextOptions<SuperHeroDbContext> context) : base(context)
     {
@@ -39,9 +39,9 @@ public class SuperHeroDbContext : DbContext
         // Seed Heroes
         modelBuilder.Entity<Hero>().HasData(new Hero[]
         {
-        new Hero { Id = 1, Name = "Aragorn", Description = "A brave warrior", HeroClassId = 1, Level = 10, QuestId = 1 },
-        new Hero { Id = 2, Name = "Gandalf", Description = "A wise mage", HeroClassId = 2, Level = 15, QuestId = 2 },
-        new Hero { Id = 3, Name = "Legolas", Description = "A skilled archer", HeroClassId = 3, Level = 12, QuestId = null }
+        new Hero { Id = 1, Name = "Aragorn", Description = "A brave warrior", HeroClassId = 1, Level = 10},
+        new Hero { Id = 2, Name = "Gandalf", Description = "A wise mage", HeroClassId = 2, Level = 15},
+        new Hero { Id = 3, Name = "Legolas", Description = "A skilled archer", HeroClassId = 3, Level = 12}
         });
 
         // Seed Quests
@@ -58,6 +58,14 @@ public class SuperHeroDbContext : DbContext
         new Equipment { Id = 2, Name = "Wizard Staff", Description = "Channel your magic power", TypeId = 1, Weight = 2.0f, HeroId = 2 },
         new Equipment { Id = 3, Name = "Leather Armor", Description = "Light but protective", TypeId = 2, Weight = 5.0f, HeroId = 3 },
         new Equipment { Id = 4, Name = "Health Potion", Description = "Restores 50 HP", TypeId = 4, Weight = 0.5f, HeroId = null }
+        });
+
+        modelBuilder.Entity<HeroQuest>().HasKey(hq => new { hq.HeroId, hq.QuestId });
+
+        modelBuilder.Entity<HeroQuest>().HasData(new HeroQuest[]
+        {
+            new HeroQuest { HeroId = 1, QuestId = 1 },
+            new HeroQuest { HeroId = 2, QuestId = 2 }
         });
     }
 

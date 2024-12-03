@@ -57,6 +57,21 @@ namespace SuperHero.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Quests",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    IsCompleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Quests", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Heroes",
                 columns: table => new
                 {
@@ -71,21 +86,36 @@ namespace SuperHero.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Heroes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Heroes_HeroClasses_HeroClassId",
+                        column: x => x.HeroClassId,
+                        principalTable: "HeroClasses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Quests",
+                name: "HeroQuests",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
-                    IsCompleted = table.Column<bool>(type: "boolean", nullable: false)
+                    HeroId = table.Column<int>(type: "integer", nullable: false),
+                    QuestId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Quests", x => x.Id);
+                    table.PrimaryKey("PK_HeroQuests", x => new { x.HeroId, x.QuestId });
+                    table.ForeignKey(
+                        name: "FK_HeroQuests_Heroes_HeroId",
+                        column: x => x.HeroId,
+                        principalTable: "Heroes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_HeroQuests_Quests_QuestId",
+                        column: x => x.QuestId,
+                        principalTable: "Quests",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.InsertData(
@@ -122,6 +152,15 @@ namespace SuperHero.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "Quests",
+                columns: new[] { "Id", "Description", "IsCompleted", "Name" },
+                values: new object[,]
+                {
+                    { 1, "Protect the castle from invaders", false, "Defend the Castle" },
+                    { 2, "Find the lost artifact in the ruins", false, "Retrieve the Ancient Artifact" }
+                });
+
+            migrationBuilder.InsertData(
                 table: "Heroes",
                 columns: new[] { "Id", "Description", "HeroClassId", "Level", "Name", "QuestId" },
                 values: new object[,]
@@ -132,13 +171,23 @@ namespace SuperHero.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "Quests",
-                columns: new[] { "Id", "Description", "IsCompleted", "Name" },
+                table: "HeroQuests",
+                columns: new[] { "HeroId", "QuestId" },
                 values: new object[,]
                 {
-                    { 1, "Protect the castle from invaders", false, "Defend the Castle" },
-                    { 2, "Find the lost artifact in the ruins", false, "Retrieve the Ancient Artifact" }
+                    { 1, 1 },
+                    { 2, 2 }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Heroes_HeroClassId",
+                table: "Heroes",
+                column: "HeroClassId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HeroQuests_QuestId",
+                table: "HeroQuests",
+                column: "QuestId");
         }
 
         /// <inheritdoc />
@@ -151,13 +200,16 @@ namespace SuperHero.Migrations
                 name: "EquipmentTypes");
 
             migrationBuilder.DropTable(
-                name: "HeroClasses");
+                name: "HeroQuests");
 
             migrationBuilder.DropTable(
                 name: "Heroes");
 
             migrationBuilder.DropTable(
                 name: "Quests");
+
+            migrationBuilder.DropTable(
+                name: "HeroClasses");
         }
     }
 }
