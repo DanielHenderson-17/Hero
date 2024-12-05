@@ -1,4 +1,4 @@
-namespace SuperHero.DTOs.Models
+namespace SuperHero.Models.DTOs
 {
     public class QuestCompleteDTO
     {

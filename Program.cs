@@ -1,5 +1,5 @@
 using SuperHero.Models;
-using SuperHero.DTOs.Models;
+using SuperHero.Models.DTOs;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http.Json;
@@ -345,13 +345,6 @@ app.MapDelete("/api/quests/{id}", async (int id, SuperHeroDbContext dbContext) =
 
     return Results.Ok(new { Message = $"Quest {quest.Name} deleted." });
 });
-
-
-
-
-
-
-
 
 app.UseHttpsRedirection();
 
